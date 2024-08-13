@@ -90,9 +90,9 @@ function createCorelation(numCats) {
         const adult = document.querySelector(`input[name="cat ${i + 1}"][value="adult"]`).checked;
 
         if (senior) {
-            multiplicador += 1;
+            multiplicador += 0.5;
         } else if (kitten) {
-            multiplicador += 2;
+            multiplicador += 1;
         }
     }
     return multiplicador;
@@ -100,7 +100,7 @@ function createCorelation(numCats) {
 
 function generateCalendar(numCats, multiplicador) {
     const itemsPerMonth = {
-        food: { amount: (numCats * 5) * multiplicador, unit: 'kg' },
+        food: { amount: (numCats * 3) * multiplicador, unit: 'kg' },
         sand: { amount: numCats * 2, unit: '2kg litter bags' },
         snacks: { amount: (numCats * 0.5) * multiplicador, unit: 'packs' },
         wetFood: { amount: (numCats * 2) * multiplicador, unit: 'cans' },
