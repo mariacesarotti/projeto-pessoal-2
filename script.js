@@ -1,3 +1,94 @@
+
+const remindersList = document.querySelector(".reminders-list");
+const numCatsInput = document.querySelector("#numCats");
+const addButton = document.querySelector("#generateBtn");
+const emptyStateImage = document.querySelector(".empty-state-image");
+const emptyStateQuote = document.querySelector(".empty-state span");
+
+let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
+let id = reminders.length ? Math.max(reminders.map(reminder => reminder.id)) + 1 : 0;
+
+function addReminder(date, items) {
+    const reminderItem = document.createElement("li");
+    reminderItem.className = 'reminder-list-item';
+    reminderItem.innerHTML = `
+        <span>Buy items: ${items.join(', ')} on ${date}</span>
+        <button class="delete-btn">
+            <i class="material-symbols-outlined">delete</i>
+        </button>
+    `;
+    remindersList.appendChild(reminderItem);
+
+    reminders.push({ id: id, date: date, items: items });
+    localStorage.setItem('reminders', JSON.stringify(reminders));
+    id++;
+
+    emptyStateImage.style.display = "none";
+    emptyStateQuote.style.display = "none";
+
+    reminderItem.querySelector(".delete-btn").addEventListener("click", () => {
+        remindersList.removeChild(reminderItem);
+        reminders = reminders.filter(reminder => reminder.id !== id);
+        localStorage.setItem('reminders', JSON.stringify(reminders));
+        if (reminders.length === 0) {
+            emptyStateImage.style.display = "block";
+            emptyStateQuote.style.display = "block";
+        }
+    });
+}
+
+function showAlertNotification(items) {
+    alert(`Reminder: Buy the following items today: ${items.join(', ')}!`);
+}
+
+
+function checkAndTriggerAlerts() {
+    const today = new Date().toISOString().split('T')[0]; 
+    const todaysReminders = reminders.filter(reminder => reminder.date === today)
+    .map(reminder => reminder.items);
+
+    if (todaysReminders.length > 0) {
+        todaysReminders.forEach(items => showAlertNotification(items));
+        clearInterval(intervalId); 
+    }
+}
+
+
+function loadReminders() {
+    if (reminders.length > 0) {
+        emptyStateImage.style.display = "none";
+        emptyStateQuote.style.display = "none";
+        reminders.forEach(reminder => {
+            const reminderItem = document.createElement("li");
+            reminderItem.className = 'reminder-list-item';
+            reminderItem.innerHTML = `
+                <span>Buy items: ${reminder.items.join(', ')} on ${reminder.date}</span>
+                <button class="delete-btn">
+                    <i class="material-symbols-outlined">delete</i>
+                </button>
+            `;
+            remindersList.appendChild(reminderItem);
+
+            reminderItem.querySelector(".delete-btn").addEventListener("click", () => {
+                remindersList.removeChild(reminderItem);
+                reminders = reminders.filter(r => r.id !== reminder.id);
+                localStorage.setItem('reminders', JSON.stringify(reminders));
+                if (reminders.length === 0) {
+                    emptyStateImage.style.display = "block";
+                    emptyStateQuote.style.display = "block";
+                }
+            });
+        });
+    }
+}
+
+
+loadReminders();
+
+
+let intervalId = setInterval(checkAndTriggerAlerts, 86400000); 
+
+
 document.getElementById('catForm').addEventListener('submit', function (event) {
     event.preventDefault();
 
@@ -16,9 +107,8 @@ document.getElementById('catForm').addEventListener('submit', function (event) {
     form.appendChild(generateBtn);
 
     generateBtn.addEventListener('click', function () {
-        multiplicador = createCorelation(numCats);
+        const multiplicador = createCorelation(numCats);
         const calendar = generateCalendar(numCats, multiplicador);
-
 
         displayCalendar(calendar);
     });
@@ -42,40 +132,40 @@ function createLabelAndInput(index) {
 
     const input = document.createElement('input');
     input.setAttribute('type', 'radio');
-    input.setAttribute('id', `kitten`);
-    input.setAttribute('name', `cat ${index + 1}`);
+    input.setAttribute('id', `kitten${index}`);
+    input.setAttribute('name', `cat${index}`);
     input.setAttribute('value', 'kitten');
     input.required = true;
     container.appendChild(input);
 
     const label = document.createElement('label');
-    label.setAttribute('for', `kitten`);
+    label.setAttribute('for', `kitten${index}`);
     label.textContent = `kitten`;
     container.appendChild(label);
 
     const input1 = document.createElement('input');
     input1.setAttribute('type', 'radio');
-    input1.setAttribute('id', `adult`);
-    input1.setAttribute('name', `cat ${index + 1}`);
+    input1.setAttribute('id', `adult${index}`);
+    input1.setAttribute('name', `cat${index}`);
     input1.setAttribute('value', 'adult');
     input1.required = true;
     container.appendChild(input1);
 
     const label1 = document.createElement('label');
-    label1.setAttribute('for', `adult`);
+    label1.setAttribute('for', `adult${index}`);
     label1.textContent = `adult`;
     container.appendChild(label1);
 
     const input2 = document.createElement('input');
     input2.setAttribute('type', 'radio');
-    input2.setAttribute('id', `senior`);
-    input2.setAttribute('name', `cat ${index + 1}`);
+    input2.setAttribute('id', `senior${index}`);
+    input2.setAttribute('name', `cat${index}`);
     input2.setAttribute('value', 'senior');
     input2.required = true;
     container.appendChild(input2);
 
     const label2 = document.createElement('label');
-    label2.setAttribute('for', `senior`);
+    label2.setAttribute('for', `senior${index}`);
     label2.textContent = `senior`;
     container.appendChild(label2);
 
@@ -83,11 +173,11 @@ function createLabelAndInput(index) {
 }
 
 function createCorelation(numCats) {
-    multiplicador = 1;
+    let multiplicador = 1;
     for (let i = 0; i < numCats; i++) {
-        const senior = document.querySelector(`input[name="cat ${i + 1}"][value="senior"]`).checked;
-        const kitten = document.querySelector(`input[name="cat ${i + 1}"][value="kitten"]`).checked;
-        const adult = document.querySelector(`input[name="cat ${i + 1}"][value="adult"]`).checked;
+        const senior = document.querySelector(`input[name="cat${i}"][value="senior"]`).checked;
+        const kitten = document.querySelector(`input[name="cat${i}"][value="kitten"]`).checked;
+        const adult = document.querySelector(`input[name="cat${i}"][value="adult"]`).checked;
 
         if (senior) {
             multiplicador += 1;
@@ -143,61 +233,51 @@ function displayCalendar(calendar) {
     const container = document.getElementById('calendarContainer');
     container.innerHTML = '';
 
-    calendar.forEach(month => {
+    calendar.forEach(({ month, days }) => {
+        const monthHeader = document.createElement('h3');
+        monthHeader.textContent = month;
+        container.appendChild(monthHeader);
 
-        const monthHeader = document.createElement('div');
-        monthHeader.classList.add('month-header');
-        monthHeader.textContent = month.month;
-        monthHeader.addEventListener('click', () => {
-            monthContent.style.display = monthContent.style.display === 'none' ? 'block' : 'none';
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        const tbody = document.createElement('tbody');
+        const tr = document.createElement('tr');
+        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+            const th = document.createElement('th');
+            th.textContent = day;
+            tr.appendChild(th);
         });
+        thead.appendChild(tr);
+        table.appendChild(thead);
 
+        let trRow = document.createElement('tr');
+        days.forEach(({ day, items }) => {
+            const td = document.createElement('td');
+            td.textContent = day;
 
-        const monthContent = document.createElement('div');
-        monthContent.classList.add('month-content');
-        monthContent.style.display = 'none';
-
-
-        const calendarHeader = document.createElement('div');
-        calendarHeader.classList.add('calendar-header');
-
-        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        daysOfWeek.forEach(day => {
-            const dayHeader = document.createElement('div');
-            dayHeader.classList.add('header');
-            dayHeader.textContent = day;
-            calendarHeader.appendChild(dayHeader);
-        });
-
-        monthContent.appendChild(calendarHeader);
-
-
-        const calendarDays = document.createElement('div');
-        calendarDays.classList.add('calendar-days');
-
-        month.days.forEach(day => {
-            const dayDiv = document.createElement('div');
-            dayDiv.classList.add('day');
-
-            if (day.day) {
-                const dayContent = document.createElement('div');
-                dayContent.innerHTML = `<strong>${day.day}</strong>`;
-                dayDiv.appendChild(dayContent);
-
-                day.items.forEach(item => {
-                    const itemSpan = document.createElement('div');
-                    itemSpan.textContent = `${item.item}: ${item.amount}`;
-                    dayDiv.appendChild(itemSpan);
+            if (items.length > 0) {
+                const ul = document.createElement('ul');
+                items.forEach(({ item, amount }) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${item}: ${amount}`;
+                    ul.appendChild(li);
                 });
-            } else {
-                dayDiv.textContent = '';
+                td.appendChild(ul);
             }
 
-            calendarDays.appendChild(dayDiv);
+            trRow.appendChild(td);
+
+            if (trRow.children.length === 7) {
+                tbody.appendChild(trRow);
+                trRow = document.createElement('tr');
+            }
         });
 
-        monthContent.appendChild(calendarDays);
-        container.appendChild(monthHeader);
-        container.appendChild(monthContent);
+        if (trRow.children.length > 0) {
+            tbody.appendChild(trRow);
+        }
+
+        table.appendChild(tbody);
+        container.appendChild(table);
     });
 }
